@@ -81,9 +81,7 @@ def test_analyze_stock_stage2_up(monkeypatch):
     assert result["MA_sequence_10>20>50>100>200"] == "Yes"
     assert result["MAs_trending_up"] == "Yes"
     # At least one of the price conditions should be True.
-    assert (
-        result["Price_above_50d"] == "Yes" or result["Price_above_30w(150d)"] == "Yes"
-    )
+    assert result["Price_above_50d_or_30w(150d)"] == "Yes"
     assert result["Higher_highs_higher_lows"] == "Yes"
     # Note: The fundamental check is a placeholder so EPS growth remains "No"
     assert result["EPS_sales_growth_3Q"] == "No"
@@ -99,7 +97,7 @@ def test_analyze_stock_stage2_flat(monkeypatch):
     # With constant prices, the moving average sequence is not strictly descending.
     assert result["MA_sequence_10>20>50>100>200"] == "No"
     # Price condition should fail (price equals the moving average, not greater)
-    assert result["Price_above_50d"] == "No"
+    assert result["Price_above_50d_or_30w(150d)"] == "No"
     # With no variation, there are no higher highs/lows.
     assert result["Higher_highs_higher_lows"] == "No"
     # Overall Stage2 should be "No"
