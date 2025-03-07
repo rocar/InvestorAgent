@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: investoragent-deployment
+  labels:
+    app: investoragent
+    namespace: investor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: investoragent
+  template:
+    metadata:
+      labels:
+        app: investoragent
+    spec:
+      containers:
+      - name: investoragent
+        image: 192.168.1.223:5000/investoragent:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: investoragent-service
+spec:
+  type: ClusterIP  # Change to LoadBalancer if you're on a cloud platform
+  selector:
+    app: investoragent
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
