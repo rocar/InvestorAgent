@@ -9,7 +9,7 @@ all: build
 
 # Build the Docker image
 build:
-	docker build -t $(IMAGE_NAME):$(TAG) .
+	docker buildx build --platform linux/amd64,linux/arm64 -t ${REGISTRY}/$(IMAGE_NAME):$(TAG) --push . --output=type=registry,registry.insecure=true
 
 # Tag the image for your local registry
 tag:
@@ -25,7 +25,11 @@ pull:
 
 # Run the container mapping port 8000 to host port 8000
 run:
-	docker run -d -p 8000:8000 $(IMAGE_NAME):$(TAG)
+	docker run -d -p 8000:8000 ${REGISTRY}/$(IMAGE_NAME):$(TAG)
+
+# Run python locally
+local:
+	uvicorn investor_agent.api:app --host 0.0.0.0 --port 8000 --reload
 
 # Follow logs of the most recent container
 logs:

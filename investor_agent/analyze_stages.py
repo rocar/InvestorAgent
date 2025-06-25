@@ -139,5 +139,19 @@ def analyze_stock_stage2(ticker):
     }
 
     tech_criteria = [ma_sequence, mas_trending_up, price_condition, higher_highs_lows]
-    results["Stage2_Overall"] = "Yes" if all(tech_criteria) else "No"
+    overall = "Yes" if all(tech_criteria) else "No"
+
+    # Apply bonus logic if overall Stage 2 is met
+    if overall == "Yes":
+        bonus_count = 0
+        if eps_sales_growth:
+            bonus_count += 1
+        if rs_70:
+            bonus_count += 1
+        if bonus_count == 1:
+            overall += "+"
+        elif bonus_count == 2:
+            overall += "++"
+
+    results["Stage2_Overall"] = overall
     return results

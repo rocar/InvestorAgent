@@ -55,18 +55,16 @@ def get_hk_mainboard_equities():
             print("Warning: Required columns not found in the file!")
             return pd.DataFrame(columns=["Stock Code"])
 
-        # Filter for Main Board equities
+        print(df.head(5))
+
         mainboard_equities = df[
             (df["Category"] == "Equity")
             & (df["Sub-Category"] == "Equity Securities (Main Board)")
         ]
 
-        # Ensure Stock Code is a string and properly zero-padded to 5 digits
-        mainboard_equities["Stock Code"] = (
-            mainboard_equities["Stock Code"].astype(str).str.zfill(5)
-        )
-
+        print("Total number of stocks (rows):", len(mainboard_equities))
         return mainboard_equities[["Stock Code"]]
+
     except Exception as e:
         print(f"Error processing Excel file: {e}")
         return pd.DataFrame(columns=["Stock Code"])
@@ -78,18 +76,69 @@ def convert_to_yahoo_format(df):
         return df
 
     def format_yahoo_code(stock_code):
-        if stock_code.startswith(
-            "0"
-        ):  # If it starts with "0", remove only one leading zero
-            return stock_code[1:] + ".HK"
-        return stock_code + ".HK"  # Otherwise, keep it as is and append ".HK"
+        # Ensure stock code is always 4 digits
+        stock_code = stock_code.zfill(4)
+        return stock_code + ".HK"
 
     return df["Stock Code"].apply(format_yahoo_code).tolist()
 
 
-# Example usage
-if __name__ == "__main__":
-    hk_stocks = get_hk_mainboard_equities()
-    yahoo_stocks = convert_to_yahoo_format(hk_stocks)
-    print(yahoo_stocks.head())
-    print(yahoo_stocks.tail())
+def get_sp500_tickers():
+    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+    try:
+        tables = pd.read_html(url)
+        sp500_tickers = tables[0]["Symbol"].tolist()
+        return sp500_tickers
+    except Exception as e:
+        print(f"Error fetching S&P 500 tickers: {e}")
+        return []
+
+
+def get_hkex_tickers():
+    url = "https://www.hkex.com.hk/eng/services/trading/securities/securitieslists/ListOfSecurities.xlsx"
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        df = pd.read_excel(BytesIO(response.content), skiprows=2)
+        df = df[df.iloc[:, 2].str.contains("Equity", na=False)]
+        hkex_tickers = df.iloc[:, 0].astype(str).str.zfill(4) + ".HK"
+        return hkex_tickers.tolist()
+    except Exception as e:
+        print(f"Error fetching HKEX tickers: {e}")
+        return []
+
+
+def get_bulk_price_changes(ticker_list):
+    """
+    Get current price and percent change from previous close for multiple tickers.
+
+    Args:
+        ticker_list (list): List of ticker symbols.
+
+    Returns:
+        List of dictionaries with ticker data.
+    """
+    data = yf.download(ticker_list, period="2d", group_by="ticker", auto_adjust=True)
+
+    result = []
+    for ticker in ticker_list:
+        try:
+            close_prices = data[ticker]["Close"]
+            if len(close_prices) < 2:
+                result.append({"ticker": ticker, "error": "Not enough data"})
+                continue
+            previous_close = close_prices[-2]
+            current_price = close_prices[-1]
+            change_percent = ((current_price - previous_close) / previous_close) * 100
+            result.append(
+                {
+                    "ticker": ticker,
+                    "current_price": round(current_price, 2),
+                    "previous_close": round(previous_close, 2),
+                    "change_percent": round(change_percent, 2),
+                }
+            )
+        except Exception as e:
+            result.append({"ticker": ticker, "error": str(e)})
+
+    return result

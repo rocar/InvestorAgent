@@ -7,3 +7,4 @@ openpyxl
 matplotlib
 scipy
 pytest
+tradingview_screener
