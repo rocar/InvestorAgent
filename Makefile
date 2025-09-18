@@ -2,14 +2,14 @@
 # Variables can be adjusted to suit your project or local registry settings.
 IMAGE_NAME = investoragent
 TAG        = latest
-REGISTRY   = 192.168.1.223:5000
+REGISTRY   = ghcr.io/rocar
 
 # Default target
 all: build
 
 # Build the Docker image
 build:
-	docker buildx build --platform linux/amd64,linux/arm64 -t ${REGISTRY}/$(IMAGE_NAME):$(TAG) --push . --output=type=registry,registry.insecure=true
+	docker buildx build --platform linux/amd64 -t ${REGISTRY}/$(IMAGE_NAME):$(TAG) --push .
 
 # Tag the image for your local registry
 tag:

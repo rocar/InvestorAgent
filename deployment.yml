@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: investoragent
-        image: 192.168.1.223:5000/investoragent:latest
+        image: ghcr.io/rocar/investoragent:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8000

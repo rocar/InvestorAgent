@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+  investoragent:
+    image: ghcr.io/rocar/investoragent:latest
+    ports:
+      - "8001:8000"
+    platform: linux/amd64
+    restart: unless-stopped
